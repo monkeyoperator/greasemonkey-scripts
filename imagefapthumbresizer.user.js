@@ -7,7 +7,7 @@
 
     var visits = GM_getObject('visits',{});
     GM_setValue('foo','bar');
-// Add jQuery
+// Add jQuery from goole
     var GM_JQ = document.createElement('script');
     var $;
     var threads=8;
