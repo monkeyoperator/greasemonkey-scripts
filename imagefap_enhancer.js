@@ -4,7 +4,8 @@
 // @include       *imagefap.com/*
 // ==/UserScript==
 // imageFapThumbSize.user.js
-
+// just doing some documenting here
+//
     var visits = GM_getObject('visits',{});
 // Add jQuery
     var GM_JQ = document.createElement('script');
