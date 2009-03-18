@@ -4,12 +4,11 @@
 // @include       *imagefap.com/*
 // ==/UserScript==
 // imageFapThumbSize.user.js
-// just doing some documenting here
-//
+
     var visits = GM_getObject('visits',{});
-// Add jQuery
-    var GM_JQ = document.createElement('script');
+
     var $;
+    var pageTracker;
     var threads=8;
     var chunksize=50;
     var piccontainer;
@@ -27,14 +26,28 @@
     var clubspage=window.location.href.match(/\/clubs\/index\.php\?cid=(.*)/);
     if( clubspage )
 	clubspage=clubspage[1];
+    // Add jQuery
+    var GM_JQ = document.createElement('script');
     GM_JQ.src = 'http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.js';
     GM_JQ.type = 'text/javascript';
     document.getElementsByTagName('body')[0].appendChild(GM_JQ);
+    // Add evil Tracking code
+    var GM_GA = document.createElement('script');
+    GM_GA.src = 'http://www.google-analytics.com/ga.js';
+    GM_GA.type = 'text/javascript';
+    document.getElementsByTagName('body')[0].appendChild(GM_GA);
 
-// Check if jQuery's loaded
+// Check if jQuery and evil Tracking code loaded
     function GM_wait() {
-        if(typeof unsafeWindow.jQuery == 'undefined') { console.log("waiting for jquery"); window.setTimeout(GM_wait,100); }
-	else { $ = unsafeWindow.jQuery.noConflict(); window.setTimeout(payload,100); }
+        if(typeof unsafeWindow.jQuery == 'undefined') console.log("waiting for jquery");
+	else { $ = unsafeWindow.jQuery.noConflict(); }
+        if(typeof unsafeWindow._gat == 'undefined') console.log("waiting for ga");
+	else { pageTracker = unsafeWindow._gat._getTracker("UA-7978064-1"); }
+	if( $ && pageTracker ) {
+		pageTracker._trackPageview();
+		window.setTimeout(payload,100);
+	}
+	else window.setTimeout(GM_wait,100);
     }
     GM_wait();
     function showimg( pic, replace ) {
