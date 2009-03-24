@@ -26,24 +26,34 @@
     var clubspage=window.location.href.match(/\/clubs\/index\.php\?cid=(.*)/);
     if( clubspage )
 	clubspage=clubspage[1];
-    // Add jQuery
+    // Add jQuery and jQuery-UI
     var GM_JQ = document.createElement('script');
-    GM_JQ.src = 'http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.js';
+    var GM_JQ_UI = document.createElement('script');
+    GM_JQ.src = 'http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js';
     GM_JQ.type = 'text/javascript';
-    document.getElementsByTagName('body')[0].appendChild(GM_JQ);
-    // Add evil Tracking code
+    GM_JQ_UI.src = 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js';
+    GM_JQ_UI.type = 'text/javascript';
+    // Add Google Analytics Tracking code
     var GM_GA = document.createElement('script');
     GM_GA.src = 'http://www.google-analytics.com/ga.js';
     GM_GA.type = 'text/javascript';
+    document.getElementsByTagName('body')[0].appendChild(GM_JQ);
+    document.getElementsByTagName('body')[0].appendChild(GM_JQ_UI);
     document.getElementsByTagName('body')[0].appendChild(GM_GA);
 
 // Check if jQuery and evil Tracking code loaded
     function GM_wait() {
-        if(typeof unsafeWindow.jQuery == 'undefined') console.log("waiting for jquery");
-	else { $ = unsafeWindow.jQuery.noConflict(); }
+        if(typeof unsafeWindow.jQuery == 'undefined') console.log("waiting for jQuery");
+	else { 
+            $ = $ || unsafeWindow.jQuery.noConflict(); 
+            if(typeof unsafeWindow.jQuery.ui == 'undefined') console.log("waiting for jQuery-UI");
+        }
+
         if(typeof unsafeWindow._gat == 'undefined') console.log("waiting for ga");
 	else { pageTracker = unsafeWindow._gat._getTracker("UA-7978064-1"); }
-	if( $ && pageTracker ) {
+	if( $ && unsafeWindow.jQuery.ui && pageTracker ) {
+                $('head').append('<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/humanity/jquery-ui.css" rel="stylesheet" type="text/css">');
+
 		pageTracker._trackPageview();
 		window.setTimeout(payload,100);
 	}
@@ -93,10 +103,10 @@
 	var numfound=0;
 	if( gallerypage ) {
 	   favlink = $('#gallery').next('a').eq(0);
-		serverPaging=$('#gallery font').eq(0);
-	    profileLinks = $('#menubar').appendTo('body').append(favlink);
-		serverPaging.appendTo('#menubar').wrap('<div style="position: absolute;top:0;left:0;background:#fff"></div>');
-            $('<div style="float:left;">paging:<a href="/gallery.php?gid='+gallerypage+'&view=1">server</a> | <a href="/gallery.php?gid='+gallerypage+'&view=2">client</a></div>').prependTo('#menubar');
+	   serverPaging=$('#gallery font').eq(0);
+	   profileLinks = $('#menubar').appendTo('body').append(favlink);
+	   serverPaging.appendTo('#menubar').wrap('<div style="position: absolute;top:0;left:0;background:#fff"></div>');
+           $('<div style="float:left;">paging:<a href="/gallery.php?gid='+gallerypage+'&view=1">server</a> | <a href="/gallery.php?gid='+gallerypage+'&view=2">client</a></div>').prependTo('#menubar');
 	}
 	thumbholder = $('<div style="position:static; float:right; width: 255px; height: 100%; overflow-x: hidden; overflow-y:scroll"></div>')
 			.appendTo($('body'));
@@ -107,9 +117,9 @@
 	var w=$('#menubar').width();
 	if( !w )
 		w=$('body').width();
-	piccontainer.css({width:w-255});
-	piccontainer.css({marginTop:-($('#menubar').height()+2)});
-	piccontainer.bind('DOMMouseScroll',function(e){
+	        piccontainer.css({width:w-255});
+	        piccontainer.css({marginTop:-($('#menubar').height()+2)});
+	        piccontainer.bind('DOMMouseScroll',function(e){
 		var idx = 0;
                 var dir = 0;
 		$.each(pics,function(i,item){
@@ -157,10 +167,11 @@
 	});
 	$('body > center:first-child').remove();
 	if( numfound > 0 ) {
-		infodiv=$('<div>converted '+numfound+' links</div>')
+		infodiv=$('<div></div>')
                          .appendTo('body')
-                         .css({position:'fixed',bottom:0,right:0,color:'#aaa',background:'#fff',padding:'5px',margin:'5px',
-                               border:'1px solid #88f',fontFamily:'arial narrow'});
+                         .css({position:'fixed',bottom:0,right:0,color:'#aaa',background:'#fff',margin:'5px',
+                               width:'300px',height:'10px',fontFamily:'arial narrow'})
+                         .progressbar({ value:0});
 
 		var prev = false;
 		var pos_in_chunk=0;
@@ -169,16 +180,16 @@
 		        if( $(this).data('prev') ) {
 			    $(this).data('prev').pic.css({opacity:'1'});
 			}
+			$(infodiv).progressbar('option','value',(numfound-preload.length)/numfound * 100);
 			if( pos_in_chunk++ < chunksize ) {
 			    if(preload[0]) {
-				infodiv.empty().append(preload.length+' left');
 				var next=preload.shift();
 				next.pic.css({opacity:'0.5',border:'3px solid #fff',display:'inline'});
 				$(this).clone(true).appendTo(piccontainer)
                                    .data('prev',next).data('thumb',next.thumb)
                                    .attr('src',next.url);
 			    } else {
-				infodiv.empty().append('done.');
+//				infodiv.empty().append('done.');
 				setTimeout(function(){infodiv.hide();},2000);
 			    }
 			} else {
