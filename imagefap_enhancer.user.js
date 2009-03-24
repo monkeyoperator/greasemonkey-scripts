@@ -10,7 +10,7 @@
     var $;
     var pageTracker;
     var threads=8;
-    var chunksize=50;
+    var chunksize=100;
     var piccontainer;
     var preload = new Array();
     var pics = new Array();
@@ -52,10 +52,10 @@
         if(typeof unsafeWindow._gat == 'undefined') console.log("waiting for ga");
 	else { pageTracker = unsafeWindow._gat._getTracker("UA-7978064-1"); }
 	if( $ && unsafeWindow.jQuery.ui && pageTracker ) {
-                $('head').append('<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/humanity/jquery-ui.css" rel="stylesheet" type="text/css">');
+		insertCSS();
 
 		pageTracker._trackPageview();
-		window.setTimeout(payload,100);
+		window.setTimeout(payload,10);
 	}
 	else window.setTimeout(GM_wait,100);
     }
@@ -104,6 +104,16 @@
 	if( gallerypage ) {
 	   favlink = $('#gallery').next('a').eq(0);
 	   serverPaging=$('#gallery font').eq(0);
+           $(':contains(next)',serverPaging).eq(1)
+               .addClass('fg-button ui-state-default ui-priority-primary ui-corner-all ui-icon ui-icon-triangle-1-e')
+               .replaceWith('').appendTo(serverPaging);
+           $(':contains(prev)',serverPaging).eq(1)
+                .addClass('fg-button ui-state-default ui-priority-primary ui-corner-all ui-icon ui-icon-triangle-1-w')
+                .replaceWith('').prependTo(serverPaging);
+
+           $('.fg-button').hover(function(){ $(this).addClass("ui-state-hover"); }, function(){ $(this).removeClass("ui-state-hover"); });
+           $('span',serverPaging).addClass('fg-left');
+
 	   profileLinks = $('#menubar').appendTo('body').append(favlink);
 	   serverPaging.appendTo('#menubar').wrap('<div style="position: absolute;top:0;left:0;background:#fff"></div>');
            $('<div style="float:left;">paging:<a href="/gallery.php?gid='+gallerypage+'&view=1">server</a> | <a href="/gallery.php?gid='+gallerypage+'&view=2">client</a></div>').prependTo('#menubar');
@@ -190,7 +200,7 @@
                                    .attr('src',next.url);
 			    } else {
 //				infodiv.empty().append('done.');
-				setTimeout(function(){infodiv.hide();},2000);
+				setTimeout(function(){infodiv.hide();},500);
 			    }
 			} else {
 			    if( !infodiv.data('waiting') ){
@@ -264,4 +274,12 @@ function GM_setObject(key, value) {
         GM_setValue(key, value.toSource());
 }
 
+function insertCSS() {
+    $('head').append('<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/humanity/jquery-ui.css" rel="stylesheet" type="text/css">');
+    $('head').append('<style id="GM_fapCSS" type="text/css">'+
+                     '.fg-button,.fg-left {float:left;} '+
+                     '.fg-left .link3, .fg-left b { margin:0 -6px};'+
+                     '.clear { clear: both; height:0; line-height:0}'+
+                     '</style>');
+}
 
