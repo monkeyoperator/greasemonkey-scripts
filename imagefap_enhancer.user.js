@@ -34,11 +34,12 @@
 	else { 
             $ = $ || unsafeWindow.jQuery.noConflict(); 
             if(typeof unsafeWindow.jQuery.ui == 'undefined') console.log("waiting for jQuery-UI");
+            if(typeof $.fn.layout == 'undefined') console.log("waiting for jQuery-Layout");
         }
 
         if(typeof unsafeWindow._gat == 'undefined') console.log("waiting for ga");
 	else { pageTracker = unsafeWindow._gat._getTracker("UA-7978064-1"); }
-	if( $ && unsafeWindow.jQuery.ui && pageTracker ) {
+	if( $ && unsafeWindow.jQuery.ui && $.fn.layout && pageTracker ) {
 		insertCSS();
 
 		pageTracker._trackPageview();
@@ -177,7 +178,7 @@
 	if( numfound > 0 ) {
 		infodiv=$('<div></div>')
                          .appendTo('body')
-                         .css({position:'fixed',bottom:0,right:0,color:'#aaa',background:'#fff',margin:'5px',
+                         .css({position:'fixed',bottom:'30px',right:'200px',color:'#aaa',background:'#fff',margin:'5px',
                                width:'300px',height:'10px',fontFamily:'arial narrow'})
                          .progressbar({ value:0});
 
