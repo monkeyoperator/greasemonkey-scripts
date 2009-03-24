@@ -26,21 +26,8 @@
     var clubspage=window.location.href.match(/\/clubs\/index\.php\?cid=(.*)/);
     if( clubspage )
 	clubspage=clubspage[1];
-    // Add jQuery and jQuery-UI
-    var GM_JQ = document.createElement('script');
-    var GM_JQ_UI = document.createElement('script');
-    GM_JQ.src = 'http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js';
-    GM_JQ.type = 'text/javascript';
-    GM_JQ_UI.src = 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js';
-    GM_JQ_UI.type = 'text/javascript';
-    // Add Google Analytics Tracking code
-    var GM_GA = document.createElement('script');
-    GM_GA.src = 'http://www.google-analytics.com/ga.js';
-    GM_GA.type = 'text/javascript';
-    document.getElementsByTagName('body')[0].appendChild(GM_JQ);
-    document.getElementsByTagName('body')[0].appendChild(GM_JQ_UI);
-    document.getElementsByTagName('body')[0].appendChild(GM_GA);
 
+    insertJS();
 // Check if jQuery and evil Tracking code loaded
     function GM_wait() {
         if(typeof unsafeWindow.jQuery == 'undefined') console.log("waiting for jQuery");
@@ -115,21 +102,32 @@
            $('span',serverPaging).addClass('fg-left');
 
 	   profileLinks = $('#menubar').appendTo('body').append(favlink);
-	   serverPaging.appendTo('#menubar').wrap('<div style="position: absolute;top:0;left:0;background:#fff"></div>');
+           profileLinks.addClass('ui-layout-north');
+	   serverPaging.addClass('ui-layout-south').appendTo('body');
            $('<div style="float:left;">paging:<a href="/gallery.php?gid='+gallerypage+'&view=1">server</a> | <a href="/gallery.php?gid='+gallerypage+'&view=2">client</a></div>').prependTo('#menubar');
 	}
-	thumbholder = $('<div style="position:static; float:right; width: 255px; height: 100%; overflow-x: hidden; overflow-y:scroll"></div>')
+	thumbholder = $('<div class="ui-layout-east"></div>')
 			.appendTo($('body'));
-	thumbholder.css({marginTop:-($('#menubar').height()+2)});
 
-	piccontainer = $('<div style="position:relative;;float:left;255px;height:100%;"></div>').appendTo($('body'));
+	piccontainer = $('<div class="ui-layout-center"></div>').appendTo($('body'));
+        $('body').layout({ north: {
+			       initClosed: true
+			       
+                           }
+                           ,south:{
+                               size: "auto"
+                           }
+                           ,center:{
+		      
+                           }
+                           ,east:{
+			       size: "150"
+                           }
+        
+                         });
+
 	piccontainer.hide();
-	var w=$('#menubar').width();
-	if( !w )
-		w=$('body').width();
-	        piccontainer.css({width:w-255});
-	        piccontainer.css({marginTop:-($('#menubar').height()+2)});
-	        piccontainer.bind('DOMMouseScroll',function(e){
+	piccontainer.bind('DOMMouseScroll',function(e){
 		var idx = 0;
                 var dir = 0;
 		$.each(pics,function(i,item){
@@ -160,7 +158,7 @@
 		},25);
 			
 	        $('img[src="'+pics[idx].thumb+'"]').get(0).scrollIntoView(false);
-                });
+        });
 	
 	$('a[href*=image.php?id=]').each(function(){
 	    $(this).appendTo(thumbholder);
@@ -274,12 +272,32 @@ function GM_setObject(key, value) {
         GM_setValue(key, value.toSource());
 }
 
+function insertJS() {
+    _insertJS('http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js');
+    _insertJS('http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js');
+    _insertJS('http://www.google-analytics.com/ga.js');
+    _insertJS('http://layout.jquery-dev.net/download/jquery.layout.min.js');
+}
+
+function _insertJS( url ) {
+    EL = document.createElement('script');
+    EL.src = url;
+    EL.type = 'text/javascript';
+    document.getElementsByTagName('head')[0].appendChild(EL);
+}
+
 function insertCSS() {
     $('head').append('<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/humanity/jquery-ui.css" rel="stylesheet" type="text/css">');
     $('head').append('<style id="GM_fapCSS" type="text/css">'+
                      '.fg-button,.fg-left {float:left;} '+
                      '.fg-left .link3, .fg-left b { margin:0 -6px};'+
                      '.clear { clear: both; height:0; line-height:0}'+
+                     '.ui-layout-pane {'+
+		     '    background: #FFF;'+
+		     '    border: 0px solid #BBB; }'+
+		     '.ui-layout-pane-east{ overflow-y: scroll }'+
+	             '.ui-layout-resizer { background: #DDD; }'+ 
+                     '.ui-layout-toggler { background: #AAA; }'+
                      '</style>');
 }
 
