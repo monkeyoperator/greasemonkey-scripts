@@ -6,6 +6,7 @@
 // imageFapThumbSize.user.js
 
     var visits = GM_getObject('visits',{});
+    var jqLayout; // jQuery Layout-Object
 
     var $;
     var pageTracker;
@@ -16,12 +17,12 @@
     var pics = new Array();
     var showtimer;
     var idxOffset = 0;
+    var debugging=false;
     var randompage=window.location.href.match(/\/random\.php/);
     var gallerypage=window.location.href.match(/\/random\.php|\/gallery\/(.*)|\/gallery\.php\?p?gid=(.*)/);
 	if( gallerypage && gallerypage[0] ) gallerypage = gallerypage[0].match(/[0-9]+/);
 	    if( gallerypage && gallerypage[0] ) gallerypage = gallerypage[0];
 	    else gallerypage = false;
-    console.log(gallerypage);
     var myclubspage=window.location.href.match(/\/clubs\/myclubs\.php/)?true:false;
     var clubspage=window.location.href.match(/\/clubs\/index\.php\?cid=(.*)/);
     if( clubspage )
@@ -30,14 +31,14 @@
     insertJS();
 // Check if jQuery and evil Tracking code loaded
     function GM_wait() {
-        if(typeof unsafeWindow.jQuery == 'undefined') console.log("waiting for jQuery");
+        if(typeof unsafeWindow.jQuery == 'undefined') log("waiting for jQuery");
 	else { 
             $ = $ || unsafeWindow.jQuery.noConflict(); 
-            if(typeof unsafeWindow.jQuery.ui == 'undefined') console.log("waiting for jQuery-UI");
-            if(typeof $.fn.layout == 'undefined') console.log("waiting for jQuery-Layout");
+            if(typeof unsafeWindow.jQuery.ui == 'undefined') log("waiting for jQuery-UI");
+            if(typeof $.fn.layout == 'undefined') log("waiting for jQuery-Layout");
         }
 
-        if(typeof unsafeWindow._gat == 'undefined') console.log("waiting for ga");
+        if(typeof unsafeWindow._gat == 'undefined') log("waiting for google-analytics");
 	else { pageTracker = unsafeWindow._gat._getTracker("UA-7978064-1"); }
 	if( $ && unsafeWindow.jQuery.ui && $.fn.layout && pageTracker ) {
 		insertCSS();
@@ -64,7 +65,7 @@
 
 
     function payload() {
-	console.log('payload started');
+	log('payload started');
         resize_thumbs();
         if( gallerypage || randompage )
             create_alternate_gallery();
@@ -82,7 +83,7 @@
 	});
     }
     function save_clubvisit( clubid ) {
-	GM_log('club '+clubid+' visited');
+	log('club '+clubid+' visited');
 	dt=new Date();
 	visits['club_'+clubid] = dt.getTime();
 	GM_setObject('visits', visits); 
@@ -111,22 +112,13 @@
 			.appendTo($('body'));
 
 	piccontainer = $('<div class="ui-layout-center"></div>').appendTo($('body'));
-        $('body').layout({ north: {
-			       initClosed: true
-			       
-                           }
-                           ,south:{
-                               size: "auto"
-                           }
-                           ,center:{
-		      
-                           }
-                           ,east:{
-			       size: "150"
-                           }
-        
-                         });
-
+        jqLayout=initLayout();
+        setInterval(function() {
+	    saveOpts={
+		east:{size: jqLayout.state.east.size}
+	    };
+	    GM_setObject('layout',saveOpts);
+	}, 1000);
 	piccontainer.hide();
 	piccontainer.bind('DOMMouseScroll',function(e){
 		var idx = 0;
@@ -225,12 +217,12 @@
 					
 			img.bind('load', loadfunction );
 			startLoads();
-		} catch(e){ console.log(e); }
+		} catch(e){ log(e); }
 	}
     }
     
     function enhance_myclubs() {
-	GM_log( 'i has myclubs' );
+	log( 'i has myclubs' );
         $( "td[width='100%'][valign='top'] table" ).each( function() {
 	    var glink=$( "tr:nth-child(2) ;a[href*='clubs/index.php?cid=']", this ).attr( 'href' );
 	    if ( glink ) {
@@ -249,15 +241,15 @@
                             var lastvisit = $(this).parent().data('lastvisit');
 			    var lastmod= new Date(gdate[1], parseInt(gdate[2])-1, gdate[3],gdate[4],gdate[5],gdate[6]);
 			    display =$(this).parent().parent().parent().children();
-			    GM_log( clubid+' lastmod:'+ lastmod.getTime()+ ' lastvisit:'+ lastvisit );
+			    log( clubid+' lastmod:'+ lastmod.getTime()+ ' lastvisit:'+ lastvisit );
 			    if( lastmod.getTime() > lastvisit || lastvisit == undefined )
 				display.css({background:'#FFE2C5'});
 			    else
 				display.css({background:'#e2FFC5'});
 				
-//			    console.log( clubid+' lastvisit: '+lastvisit);
-//			    console.log( clubid+' lastmod: '+lastmod);
-//			    $(this).parent().parent().next().append(lastmod.toLocaleString());
+			    console.log( clubid+' lastvisit: '+lastvisit);
+			    console.log( clubid+' lastmod: '+lastmod);
+			    $(this).parent().parent().next().append(lastmod.toLocaleString());
 			    return false;
 			}
 		    });
@@ -265,6 +257,29 @@
 	    }
         });
     }
+function initLayout() {
+    layoutSettings = { 
+        north: {
+	    initClosed: true
+        },
+        south:{
+	    size: "auto"
+        },
+	center:{ },
+	east:{
+	    size: "150"
+        }
+    };
+    savedLayout=GM_getObject('layout',{});
+    $.extend( layoutSettings, savedLayout);
+
+    return $('body').layout( layoutSettings );
+}
+
+function log( something ) {
+    if( debugging )
+	console.log( something );
+}
 function GM_getObject(key, defaultValue) {
         return (new Function('', 'return (' + GM_getValue(key, 'void 0') + ')'))() || defaultValue;
 }
