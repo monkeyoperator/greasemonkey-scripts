@@ -90,6 +90,7 @@
     }
     function create_alternate_gallery() {
 	var numfound=0;
+	$('<div id="south-pane" class="ui-layout-south"></div>').appendTo('body');
 	if( gallerypage ) {
 	   favlink = $('#gallery').next('a').eq(0);
 	   serverPaging=$('#gallery font').eq(0);
@@ -105,13 +106,13 @@
 
 	   profileLinks = $('#menubar').appendTo('body').append(favlink);
            profileLinks.addClass('ui-layout-north');
-	   serverPaging.addClass('ui-layout-south').appendTo('body');
-           $('<div style="float:left;">paging:<a href="/gallery.php?gid='+gallerypage+'&view=1">server</a> | <a href="/gallery.php?gid='+gallerypage+'&view=2">client</a></div>').prependTo('#menubar');
+	   serverPaging.appendTo('#south-pane');
+           $('<div id="pagingtype">paging:<a href="/gallery.php?gid='+gallerypage+'&view=1">server</a> | <a href="/gallery.php?gid='+gallerypage+'&view=2">client</a></div>').appendTo('#south-pane');
 	}
-	thumbholder = $('<div class="ui-layout-east"></div>')
+	thumbholder = $('<div class="ui-layout-east" id="east-pane"></div>')
 			.appendTo($('body'));
 
-	piccontainer = $('<div class="ui-layout-center"></div>').appendTo($('body'));
+	piccontainer = $('<div class="ui-layout-center" id="center-pane"></div>').appendTo($('body'));
         jqLayout=initLayout();
         setInterval(function() {
 	    saveOpts={
@@ -119,7 +120,6 @@
 	    };
 	    GM_setObject('layout',saveOpts);
 	}, 1000);
-	piccontainer.hide();
 	piccontainer.bind('DOMMouseScroll',function(e){
 		var idx = 0;
                 var dir = 0;
@@ -168,10 +168,8 @@
 	});
 	$('body > center:first-child').remove();
 	if( numfound > 0 ) {
-		infodiv=$('<div></div>')
-                         .appendTo('body')
-                         .css({position:'fixed',bottom:'30px',right:'200px',color:'#aaa',background:'#fff',margin:'5px',
-                               width:'300px',height:'10px',fontFamily:'arial narrow'})
+		infodiv=$('<div id="infodiv"></div>')
+                         .appendTo('#south-pane')
                          .progressbar({ value:0});
 
 		var prev = false;
@@ -263,7 +261,7 @@ function initLayout() {
 	    initClosed: true
         },
         south:{
-	    size: "auto"
+	    size: "30"
         },
 	center:{ },
 	east:{
@@ -314,6 +312,9 @@ function insertCSS() {
 		     '.ui-layout-pane-east{ overflow-y: scroll }'+
 	             '.ui-layout-resizer { background: #DDD; }'+ 
                      '.ui-layout-toggler { background: #AAA; }'+
+                     '#south-pane { padding: 5px; font-family: "Arial narrow"}'+
+                     '#infodiv { float: right;color:#aaa;background:#fff;width:300px;height:10px;}'+
+                     '#pagingtype { float: right;margin-left: 20px;}'+
                      '</style>');
 }
 
