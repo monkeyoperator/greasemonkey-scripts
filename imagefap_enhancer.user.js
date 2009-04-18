@@ -10,7 +10,7 @@
 
     var $;
     var pageTracker;
-    var threads=8;
+    var threads=6;
     var chunksize=100;
     var piccontainer;
     var preload = new Array();
@@ -155,13 +155,13 @@
 	
 	$('a[href*=image.php?id=]').each(function(){
 	    $(this).appendTo(thumbholder);
+            $(this).addClass('thumb thumb_initial');
 	    var pic = $(this).find('img').eq(0);
 	    if( pic.attr && pic.attr('src') ) {
 	        var picurl = pic.attr('src').replace(/thumb/,"full" );
                 var picobj = {pic:pic,url:picurl,thumb:pic.attr('src')};
 		preload.push(picobj);
 		pics.push(picobj);
-		pic.css({maxWidth:'120px',maxHeight:'120px',display:'none'});
 		$(this).mouseover(function(){ showimg(picobj); return false; });
 		numfound++;
 	    } 
@@ -177,13 +177,13 @@
 		loadfunction = function() {
 		    try{
 		        if( $(this).data('prev') ) {
-			    $(this).data('prev').pic.css({opacity:'1'});
+			    $(this).data('prev').pic.parent().addClass('thumb_done').removeClass('thumb_loading');
 			}
 			$(infodiv).progressbar('option','value',(numfound-preload.length)/numfound * 100);
 			if( pos_in_chunk++ < chunksize ) {
 			    if(preload[0]) {
 				var next=preload.shift();
-				next.pic.css({opacity:'0.5',border:'3px solid #fff',display:'inline'});
+				next.pic.parent().addClass('thumb_loading').removeClass('thumb_initial');
 				$(this).clone(true).appendTo(piccontainer)
                                    .data('prev',next).data('thumb',next.thumb)
                                    .attr('src',next.url);
@@ -315,6 +315,31 @@ function insertCSS() {
                      '#south-pane { padding: 5px; font-family: "Arial narrow"}'+
                      '#infodiv { float: right;color:#aaa;background:#fff;width:300px;height:10px;}'+
                      '#pagingtype { float: right;margin-left: 20px;}'+
+                     '.thumb { display: block; float: left; border: 1px solid #eee;}'+
+		     '.thumb img { border: 3px solid #fff; display:inline; opacity:0; '+
+                     '             maxWidth:120px; maxHeight:120px }'+
+                     '.thumb_initial { background: transparent url(data:image/gif;base64,'+
+			'R0lGODlhEAAQAPEAAP///wAAADY2NgAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdp'+
+			'dGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAACLYSPacLtvkA7U64qGb2C6gtyXmeJ'+
+			'HIl+WYeuY7SSLozV6WvK9pfqWv8IKoaIAgAh+QQJCgAAACwAAAAAEAAQAAACLYSPacLtvhY7DYhY'+
+			'5bV62xl9XvZJFCiGaReS1Xa5ICyP2jnS+M7drPgIKoaIAgAh+QQJCgAAACwAAAAAEAAQAAACLISP'+
+			'acLtvk6TE4jF6L3WZsyFlcd1pEZhKBixYOie8FiJ39nS97f39gNUCBEFACH5BAkKAAAALAAAAAAQ'+
+			'ABAAAAIshI9pwu2+xGmTrSqjBZlqfnnc1onmh44RxoIp5JpWN2b1Vdvn/ZbPb1MIAQUAIfkECQoA'+
+			'AAAsAAAAABAAEAAAAi2Ej2nC7b7YaVPEamPOgOqtYd3SSeFYmul0rlcpnpyXgu4K0t6mq/wD5CiG'+
+			'gAIAIfkECQoAAAAsAAAAABAAEAAAAiyEj2nC7b7akSuKyXDE11ZvdWLmiQB1kiOZdifYailHvzBk'+
+			'o5Kpq+HzUAgRBQA7AAAAAAAAAAAA) no-repeat center center; }'+
+                     '.thumb_loading { background: transparent url(data:image/gif;base64,'+
+'R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05F'+
+'VFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla'+
+'+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr'+
+'6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoL'+
+'LoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7'+
+'baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYA'+
+'qrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0Ua'+
+'FBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==) no-repeat center center; }'+
+                     '.thumb_loading img { opacity:0.5; }'+
+                     '.thumb_done { background: transparent}'+
+                     '.thumb_done img { opacity:1; }'+
                      '</style>');
 }
 
