@@ -67,6 +67,7 @@
     function payload() {
 	log('payload started');
         resize_thumbs();
+        relative_dates();
         if( gallerypage || randompage )
             create_alternate_gallery();
         if( myclubspage )
@@ -80,6 +81,50 @@
 		if( s != -1 ) {
 			$(this).replaceWith('<img border="0" src="'+this.src.replace(/images\/mini\//, "images/thumb/")+'">');
 		}
+	});
+    }
+    function relative_dates() {
+	dateTimeReg=/(([0-9]{2}):([0-9]{2}):([0-9]{2}))|(([0-9]{4})-([0-9]{2})-([0-9]{2}))/;
+	dateELs = $('center').filter(function(){
+	    return $(this).children().length==0 && dateTimeReg.test(this.textContent || this.innerText || jQuery(this).text() || "");
+	});
+
+	dateELs.each(function(){
+		var $this=$(this);
+		var $thisText = $.trim($this.text());
+	        var values;	
+		var postdate = new Date();
+		if( $thisText.indexOf(':') !== -1 ) {
+			values = $thisText.split(":");
+			postdate.setHours( values[0] );
+			postdate.setMinutes( values[1]);
+			postdate.setSeconds( values[2] );
+		} else {
+			values = $thisText.split('-');
+			postdate.setFullYear( values[0] );
+			postdate.setMonth( values[1] - 1 );
+			postdate.setDate( values[2] );
+		}
+		var relative_to = new Date();
+		var delta = parseInt((relative_to.getTime() - postdate.getTime() ) / 1000 );
+//		delta = delta + (relative_to.getTimezoneOffset() * 60);
+
+		var r = '';
+		  if (delta < 60) {
+			r = delta + 'seconds ago';
+		  } else if(delta < (60 * 60)) {
+			r = (parseInt(delta / 60)).toString() + ' minutes ago';
+		  } else if(delta < (24*60*60)) {
+			r = '' + (parseInt(delta / 3600)).toString() + ' hours ago';
+		  } else if(delta < (48*60*60)) {
+			r = '1 day ago';
+		  } else if(delta < (14 * 86400)) {
+			r = (parseInt(delta / 86400)).toString() + ' days ago';
+		  } else {
+			r = '' + (parseInt(delta / (86400 * 30))).toString() + ' months ago';
+		  }
+		$this.html( r );
+		$this.attr('title',$thisText);
 	});
     }
     function save_clubvisit( clubid ) {
@@ -304,7 +349,7 @@ function insertCSS() {
     $('head').append('<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/humanity/jquery-ui.css" rel="stylesheet" type="text/css">');
     $('head').append('<style id="GM_fapCSS" type="text/css">'+
                      '.fg-button,.fg-left {float:left;} '+
-                     '.fg-left .link3, .fg-left b { margin:0 -6px};'+
+                     '.fg-left .link3, .fg-left b { margin:0 -1px};'+
                      '.clear { clear: both; height:0; line-height:0}'+
                      '.ui-layout-pane {'+
 		     '    background: #FFF;'+
