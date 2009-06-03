@@ -85,7 +85,7 @@
     }
     function relative_dates() {
 	dateTimeReg=/(([0-9]{2}):([0-9]{2}):([0-9]{2}))|(([0-9]{4})-([0-9]{2})-([0-9]{2}))/;
-	dateELs = $('center').filter(function(){
+	dateELs = $('center,span').filter(function(){
 	    return $(this).children().length==0 && dateTimeReg.test(this.textContent || this.innerText || jQuery(this).text() || "");
 	});
 
@@ -94,17 +94,26 @@
 		var $thisText = $.trim($this.text());
 	        var values;	
 		var postdate = new Date();
-		if( $thisText.indexOf(':') !== -1 ) {
-			values = $thisText.split(":");
-			postdate.setHours( values[0] );
-			postdate.setMinutes( values[1]);
-			postdate.setSeconds( values[2] );
-		} else {
-			values = $thisText.split('-');
-			postdate.setFullYear( values[0] );
-			postdate.setMonth( values[1] - 1 );
-			postdate.setDate( values[2] );
+		var has_time = $thisText.indexOf(':') !== -1;
+		var has_date = $thisText.indexOf('-') !== -1;
+		var date_values = $thisText.split('-');
+		var time_values = $thisText.split(':');
+		if( has_date && has_time ) {
+			values = $thisText.split(" ");
+			date_values = values[0].split('-');
+			time_values = values[1].split(':');
 		}
+		if( has_date ) {
+			postdate.setFullYear( date_values[0] );
+			postdate.setMonth( date_values[1] - 1 );
+			postdate.setDate( date_values[2] );
+		}
+		if ( has_time ){
+			postdate.setHours( time_values[0] );
+			postdate.setMinutes( time_values[1]);
+			postdate.setSeconds( time_values[2] );
+		}
+
 		var relative_to = new Date();
 		var delta = parseInt((relative_to.getTime() - postdate.getTime() ) / 1000 );
 //		delta = delta + (relative_to.getTimezoneOffset() * 60);
@@ -118,7 +127,7 @@
 			r = '' + (parseInt(delta / 3600)).toString() + ' hours ago';
 		  } else if(delta < (48*60*60)) {
 			r = '1 day ago';
-		  } else if(delta < (14 * 86400)) {
+		  } else if(delta < (31 * 86400)) {
 			r = (parseInt(delta / 86400)).toString() + ' days ago';
 		  } else {
 			r = '' + (parseInt(delta / (86400 * 30))).toString() + ' months ago';
