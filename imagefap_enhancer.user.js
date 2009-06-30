@@ -2,6 +2,9 @@
 // @name          ImageFap enhancer
 // @description	  enlarges thumbs, alternate gallery view, enhanced 'my clubs' page on ImageFap
 // @include       *imagefap.com/*
+// @require       http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js
+// @require       http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js
+// @require       http://layout.jquery-dev.net/download/jquery.layout.min.js
 // ==/UserScript==
 // imageFapThumbSize.user.js
 
@@ -28,27 +31,21 @@
     if( clubspage )
 	clubspage=clubspage[1];
 
-    insertJS();
-// Check if jQuery and evil Tracking code loaded
-    function GM_wait() {
-        if(typeof unsafeWindow.jQuery == 'undefined') log("waiting for jQuery");
-	else { 
-            $ = $ || unsafeWindow.jQuery.noConflict(); 
-            if(typeof unsafeWindow.jQuery.ui == 'undefined') log("waiting for jQuery-UI");
-            if(typeof $.fn.layout == 'undefined') log("waiting for jQuery-Layout");
-        }
+    insertCSS();
+    main();
 
-        if(typeof unsafeWindow._gat == 'undefined') log("waiting for google-analytics");
-	else { pageTracker = unsafeWindow._gat._getTracker("UA-7978064-1"); }
-	if( $ && unsafeWindow.jQuery.ui && $.fn.layout && pageTracker ) {
-		insertCSS();
 
-		pageTracker._trackPageview();
-		window.setTimeout(payload,10);
-	}
-	else window.setTimeout(GM_wait,100);
+    function main() {
+	log('payload started');
+        resize_thumbs();
+        relative_dates();
+        if( gallerypage || randompage )
+            create_alternate_gallery();
+        if( myclubspage )
+            enhance_myclubs();
+        if( clubspage )
+	    save_clubvisit( clubspage );
     }
-    GM_wait();
     function showimg( pic, replace ) {
 	$('img',thumbholder).css({borderColor:'#fff'});
 	piccontainer.children().css({position:'absolute'}).attr('showing',0);
@@ -61,19 +58,6 @@
 		   piccontainer.hide();
                });
 	$('img[src="'+showpic.data('thumb')+'"]').css({borderColor:'#f00'});
-    }
-
-
-    function payload() {
-	log('payload started');
-        resize_thumbs();
-        relative_dates();
-        if( gallerypage || randompage )
-            create_alternate_gallery();
-        if( myclubspage )
-            enhance_myclubs();
-        if( clubspage )
-	    save_clubvisit( clubspage );
     }
     function resize_thumbs() {
 	$('img').each(function () {
@@ -338,20 +322,6 @@ function GM_getObject(key, defaultValue) {
 
 function GM_setObject(key, value) {
         GM_setValue(key, value.toSource());
-}
-
-function insertJS() {
-    _insertJS('http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js');
-    _insertJS('http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js');
-    _insertJS('http://www.google-analytics.com/ga.js');
-    _insertJS('http://layout.jquery-dev.net/download/jquery.layout.min.js');
-}
-
-function _insertJS( url ) {
-    EL = document.createElement('script');
-    EL.src = url;
-    EL.type = 'text/javascript';
-    document.getElementsByTagName('head')[0].appendChild(EL);
 }
 
 function insertCSS() {
