@@ -11,9 +11,9 @@
     var visits = GM_getObject('visits',{});
     var jqLayout; // jQuery Layout-Object
 
-    var $;
     var pageTracker;
-    var threads=6;
+    var threadTimeout = 3000;
+    var numThreads = 6;
     var chunksize=100;
     var piccontainer;
     var preload = new Array();
@@ -53,9 +53,9 @@
 	showpic = $('[src='+pic.url+']');
 	showpic.css({position:'static'})
  	       .attr('showing',1)
+	       .unbind('click')
                .click(function(){
-                   $(this).css({position:'absolute'}).attr('showing',0);
-		   piccontainer.hide();
+		   window.open(this.src);
                });
 	$('img[src="'+showpic.data('thumb')+'"]').css({borderColor:'#f00'});
     }
@@ -68,9 +68,9 @@
 	});
     }
     function relative_dates() {
-	dateTimeReg=/(([0-9]{2}):([0-9]{2}):([0-9]{2}))|(([0-9]{4})-([0-9]{2})-([0-9]{2}))/;
-	dateELs = $('center,span').filter(function(){
-	    return $(this).children().length==0 && dateTimeReg.test(this.textContent || this.innerText || jQuery(this).text() || "");
+	dateTimeReg=/([0-9]{2}:[0-9]{2}:[0-9]{2})|([0-9]{4}-[0-9]{2}-[0-9]{2})/;
+	dateELs = $('center,span,td').filter(function(){
+	    return $(this).children().length==0 && dateTimeReg.test(this.textContent || this.innerText || $(this).text() || "");
 	});
 
 	dateELs.each(function(){
@@ -212,9 +212,10 @@
 
 		var prev = false;
 		var pos_in_chunk=0;
-		loadfunction = function() {
+		loadfunction = function( event, timeout ) {
+                    log( timeout );
 		    try{
-		        if( $(this).data('prev') ) {
+		        if( $(this).data('prev') && !timeout ) {
 			    $(this).data('prev').pic.parent().addClass('thumb_done').removeClass('thumb_loading');
 			}
 			$(infodiv).progressbar('option','value',(numfound-preload.length)/numfound * 100);
@@ -222,9 +223,12 @@
 			    if(preload[0]) {
 				var next=preload.shift();
 				next.pic.parent().addClass('thumb_loading').removeClass('thumb_initial');
-				$(this).clone(true).appendTo(piccontainer)
+				var newthread = $(this).clone(true).appendTo(piccontainer)
                                    .data('prev',next).data('thumb',next.thumb)
                                    .attr('src',next.url);
+                                setTimeout( function() {
+                                    newthread.trigger('load',[true]);
+                                },threadTimeout);
 			    } else {
 //				infodiv.empty().append('done.');
 				setTimeout(function(){infodiv.hide();},500);
@@ -240,9 +244,14 @@
 		startLoads = function() {
 		    pos_in_chunk=0;
 		    infodiv.data('waiting',false);
-		    for( var i=0; i < threads; i++ )
-			setTimeout(function(){img.clone(true).trigger('load');},i*200);
-		 
+		    for( var i=0; i < numThreads; i++ ) {
+			setTimeout(function(){
+                          var thread=img.clone(true).trigger('load');
+                          setTimeout(function(){
+                              thread.trigger('load',[true]);
+                          },threadTimeout);
+                        },i*100);
+                    }
 		}
 		try {
 			var img = $('<img>')
