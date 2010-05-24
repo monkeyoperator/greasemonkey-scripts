@@ -3,15 +3,14 @@
 // @description	  enlarges thumbs, alternate gallery view, enhanced 'my clubs' page on ImageFap
 // @include       *imagefap.com/*
 // @require       http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js
-// @require       http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js
-// @require       http://layout.jquery-dev.net/download/jquery.layout.min.js
 // ==/UserScript==
 // imageFapThumbSize.user.js
 
     var visits = GM_getObject('visits',{});
     var jqLayout; // jQuery Layout-Object
 
-    var pageTracker;
+    var Ext;
+    var debugging = true;
     var threadTimeout = 3000;
     var numThreads = 6;
     var chunksize=100;
@@ -32,12 +31,35 @@
 	clubspage=clubspage[1];
 
     insertCSS();
-    main();
+//    insertExtJs();
+    main()
 
+    function add_script_link(url) {
+    	var script = document.createElement("script");
+    	script.type = "text/javascript";
+    	script.src = url;
+    	document.getElementsByTagName('head')[0].appendChild(script);
+    }
+    
+    function insertExtJs( ) {
+
+    	// Add javascripts and stylesheets
+    	add_script_link('http://extjs.cachefly.net/ext-3.2.0/adapter/ext/ext-base-debug.js');
+        add_script_link('http://extjs.cachefly.net/ext-3.2.0/ext-all-debug.js');
+        wait();
+    }
+    function wait() {
+    	if (typeof(unsafeWindow.Ext) == 'undefined' || typeof(unsafeWindow.Ext.Template) == 'undefined') {
+    		window.setTimeout(wait, 100);
+    	} else {
+    		Ext = unsafeWindow.Ext;
+    		main();
+    	}
+    }
 
     function main() {
-	log('payload started');
-        resize_thumbs();
+
+    	resize_thumbs();
         relative_dates();
         if( gallerypage || randompage )
             create_alternate_gallery();
@@ -334,23 +356,8 @@ function GM_setObject(key, value) {
 }
 
 function insertCSS() {
-    $('head').append('<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/humanity/jquery-ui.css" rel="stylesheet" type="text/css">');
+    $('head').append('<link href="http://extjs.cachefly.net/ext-3.2.0/resources/css/ext-all.css" rel="stylesheet" type="text/css">');
     $('head').append('<style id="GM_fapCSS" type="text/css">'+
-                     '.fg-button,.fg-left {float:left;} '+
-                     '.fg-left .link3, .fg-left b { margin:0 -1px};'+
-                     '.clear { clear: both; height:0; line-height:0}'+
-                     '.ui-layout-pane {'+
-		     '    background: #FFF;'+
-		     '    border: 0px solid #BBB; }'+
-		     '.ui-layout-pane-east{ overflow-y: scroll }'+
-	             '.ui-layout-resizer { background: #DDD; }'+ 
-                     '.ui-layout-toggler { background: #AAA; }'+
-                     '#south-pane { padding: 5px; font-family: "Arial narrow"}'+
-                     '#infodiv { float: right;color:#aaa;background:#fff;width:300px;height:10px;}'+
-                     '#pagingtype { float: right;margin-left: 20px;}'+
-                     '.thumb { display: block; float: left; border: 1px solid #eee;}'+
-		     '.thumb img { border: 3px solid #fff; display:inline; opacity:0; '+
-                     '             maxWidth:120px; maxHeight:120px }'+
                      '.thumb_initial { background: transparent url(data:image/gif;base64,'+
 			'R0lGODlhEAAQAPEAAP///wAAADY2NgAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdp'+
 			'dGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAACLYSPacLtvkA7U64qGb2C6gtyXmeJ'+
