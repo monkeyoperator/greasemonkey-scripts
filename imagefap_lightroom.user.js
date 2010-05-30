@@ -15,18 +15,27 @@ document.cookie='popundr=1; path=/; expires='+new Date(Date.now()+24*60*60*1000*
 
                 document.getElementsByTagName('head')[0].appendChild(script);
         }
-	function loadCss( url ) {
-                var link     = document.createElement('link');
-                link.type    = 'text/css';
-                link.rel     = 'stylesheet';
-                link.href     = url;
-		document.getElementsByTagName('head')[0].appendChild(link);
-
-	}
+		function loadCss( url ) {
+	                var link     = document.createElement('link');
+	                link.type    = 'text/css';
+	                link.rel     = 'stylesheet';
+	                link.href     = url;
+			document.getElementsByTagName('head')[0].appendChild(link);
+	
+		}
+		function addStyle( style ) {
+			var tag = document.createElement('style');
+			tag.innerHTML=style;
+			document.getElementsByTagName('head')[0].appendChild(tag);
+		}
 
         loadScript('http://extjs.cachefly.net/ext-3.2.0/adapter/ext/ext-base-debug.js');
         loadScript('http://extjs.cachefly.net/ext-3.2.0/ext-all-debug.js');
         loadCss('http://extjs.cachefly.net/ext-3.2.0/resources/css/ext-all.css');
+        addStyle('.thumb-loading { background: transparent url(data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==) no-repeat center center; }'+
+        		 '.thumb-loading img {opacity:0.5}'+
+                 '.thumb-wrap{ padding:3px; float:left; }'+
+        		 '.thumb{ padding:0px;}');
         extjs_wait();
         function extjs_wait() {
                 if( typeof window.Ext == 'undefined' || typeof window.Ext.Window == 'undefined') {
@@ -42,10 +51,13 @@ var main = function() {
     var Ext=this;
     var showDetailTimer;
     Ext.apply(Function.prototype,{createInterceptor:function(fcn,scope){var method=this;return!Ext.isFunction(fcn)?this:function(){var me=this,args=arguments;fcn.target=me;fcn.method=method;return(fcn.apply(scope||me||window,args)!==false)?method.apply(me||window,args):null;};},createCallback:function(){var args=arguments,method=this;return function(){return method.apply(window,args);};},createDelegate:function(obj,args,appendArgs){var method=this;return function(){var callArgs=args||arguments;if(appendArgs===true){callArgs=Array.prototype.slice.call(arguments,0);callArgs=callArgs.concat(args);}else if(Ext.isNumber(appendArgs)){callArgs=Array.prototype.slice.call(arguments,0);var applyArgs=[appendArgs,0].concat(args);Array.prototype.splice.apply(callArgs,applyArgs);} return method.apply(obj||window,callArgs);};},defer:function(millis,obj,args,appendArgs){var fn=this.createDelegate(obj,args,appendArgs);if(millis>0){return setTimeout(fn,millis);} fn();return 0;}});Ext.applyIf(String,{format:function(format){var args=Ext.toArray(arguments,1);return format.replace(/\{(\d+)\}/g,function(m,i){return args[i];});}});
+    Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
+        expires: new Date(new Date().getTime()+(1000*60*60*24*7)) //7 days from now
+    }));
 
     var picStore=new Ext.data.ArrayStore({
 	    	storeId: 'picStore',
-	    	fields:['imgUrl','thumbUrl','thumbImg','img','current']
+	    	fields:['imgUrl','thumbUrl','thumbImg','img','current','loaded']
         });
     var Templates = {};
 
@@ -78,6 +90,15 @@ var main = function() {
     function collect_Images() {
     	Ext.each(Ext.query('a[href*=image.php?id=] img'),function(){
     		var Img=new Image();
+    		var ExtImg= Ext.get(Img);
+    		
+    		ExtImg.on('load', function(e,t) {
+    			var index = picStore.findExact('imgUrl',t.src);
+    			if( index != -1 ) {
+    				record=picStore.getAt(index);
+    				record.set('loaded',true);
+    			}
+    		})
     		Img.src=this.src.replace(/thumb/,"full" );
     		var element={thumbUrl:this.src,imgUrl:this.src.replace(/thumb/,"full" ),thumbImg:this,img:Img};
     		picStore.addSorted( new picStore.recordType(element) );
@@ -87,8 +108,8 @@ var main = function() {
     function initTemplates() {
 		Templates.thumbTemplate = new Ext.XTemplate(
 			'<tpl for=".">',
-				'<div class="thumb-wrap" style="padding:3px;border:1px solid #888;border-width:1px 0 0 0" >',
-				'<div class="thumb" style="padding-bottom:3px"><img src="{thumbUrl}"></div>',
+				'<div class="thumb-wrap">',
+				'<div class="thumb {[values.loaded? "thumb-done": "thumb-loading"]}"><img src="{thumbUrl}"></div>',
 				'</div>',
 			'</tpl>'
 		);
@@ -119,7 +140,8 @@ var main = function() {
 	                {header:'thumbURL',width:100,dataIndex:'thumbUrl',hidden:true},
 	                {header:'thumb',width:100,dataIndex:'thumbImg',hidden:true},
 	                {header:'img',width:100,dataIndex:'img',hidden:true},
-	                {header:'current',width:100,dataIndex:'current'}
+	                {header:'current',width:100,dataIndex:'current'},
+	                {header:'loaded',width:100,dataIndex:'loaded'}
 	            ]
 	        })
         });
@@ -167,6 +189,8 @@ var main = function() {
         width:800,
         height:600,
         border:false,
+        id:'lightroom-window',
+        stateful:true,
         layout:'border',
         title:'Lightroom',
         maximizable:true,
@@ -197,12 +221,13 @@ var main = function() {
                         region: 'west',
                         html: 'West',
                         margins: '0 0 0 5',
-                        width: 500,
+                        width: 300,
                         id:'west-panel',
                         layout:'border',
-                        items:[ {xtype:'tabpanel',region:'center',items:[{title:'favs'}, storeView ]} ]
+                        collapsed:false,
+                        items:[ {xtype:'tabpanel',region:'center',activeTab:0,items:[storeView ]} ]
                     },{
-                        title: 'East',
+                    	title:'thumbs',
                         region: 'east',
                         html: 'East',
                         margins: '0 5 0 0',
@@ -210,12 +235,11 @@ var main = function() {
                         id:'east-panel',
                         collapsed:false,
                         layout:'border',
-                        
                         items:[ {
         					region: 'center',
         					autoScroll: true,
         					items: thumbView },
-        					{region:'south', height:20,id:'pager-panel',collapsible:false}]
+        					{region:'south', height:25,id:'pager-panel',collapsible:false}]
                     },{
                         region: 'center',
                         collapsible: false,
