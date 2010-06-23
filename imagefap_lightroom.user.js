@@ -33,9 +33,10 @@ document.cookie='popundr=1; path=/; expires='+new Date(Date.now()+24*60*60*1000*
         loadScript('http://extjs.cachefly.net/ext-3.2.0/ext-all-debug.js');
         loadCss('http://extjs.cachefly.net/ext-3.2.0/resources/css/ext-all.css');
         addStyle('.thumb-loading { background: transparent url(data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==) no-repeat center center; }'+
-        		 '.thumb-loading img {opacity:0.5}'+
+                 '.thumb-loading img {opacity:0.5}'+
+		 '.thumb-current img { outline: 3px solid green }'+
                  '.thumb-wrap{ padding:3px; float:left; }'+
-        		 '.thumb{ padding:0px;}');
+        	 '.thumb{ padding:0px;}');
         extjs_wait();
         function extjs_wait() {
                 if( typeof window.Ext == 'undefined' || typeof window.Ext.Window == 'undefined') {
@@ -60,6 +61,8 @@ var main = function() {
 	    	fields:['imgUrl','thumbUrl','thumbImg','img','current','loaded']
         });
     var Templates = {};
+    var Bus =  new Ext.util.Observable();
+
 
     var randompage=window.location.href.match(/\/random\.php/);
     var gallerypage=window.location.href.match(/\/random\.php|\/gallery\/(.*)|\/gallery\.php\?p?gid=(.*)/);
@@ -109,7 +112,7 @@ var main = function() {
 		Templates.thumbTemplate = new Ext.XTemplate(
 			'<tpl for=".">',
 				'<div class="thumb-wrap">',
-				'<div class="thumb {[values.loaded? "thumb-done": "thumb-loading"]}"><img src="{thumbUrl}"></div>',
+				'<div class="thumb {[values.loaded? "thumb-done": "thumb-loading"]} {[values.current ? "thumb-current" : ""]}"><img src="{thumbUrl}"></div>',
 				'</div>',
 			'</tpl>'
 		);
@@ -117,7 +120,7 @@ var main = function() {
 
 		Templates.detailsTemplate = new Ext.XTemplate(
 				'<tpl for=".">',
-					'<img style="max-width:{maxW}px; max-height:{maxH}px;" src="{imgUrl}">',
+					'<a href="{imgUrl}" target="_blank"><img style="max-width:{maxW}px; max-height:{maxH}px;" src="{imgUrl}"></a>',
 				'</tpl>'
 		);
 		Templates.detailsTemplate.compile();
@@ -169,12 +172,15 @@ var main = function() {
         function showDetail(index){
 			var bigPic=Ext.getCmp('big-pic');
 			var record;
-			currentIndex=picStore.findExact('current',true);
+			var currentIndex=picStore.findExact('current',true);
 			if(currentIndex != -1) {
 				record=picStore.getAt(currentIndex);
 				record.set('current',false);
 			}
 			record=picStore.getAt(index);
+			if( record == undefined )
+				return showDetail( 0 );
+
 			record.set('current',true);
 			picStore.commitChanges();
 			data=record.data;
@@ -183,7 +189,27 @@ var main = function() {
 			bigPic.update(Templates.detailsTemplate.apply( data ));
 			
 		 }
+	function showNext( ) {
+	    var currentIndex=picStore.findExact('current',true);
+	    var nextIndex = currentIndex +1;
+	    if( nextIndex > picStore.getCount() || currentIndex == -1 )
+		nextIndex = 0;
 
+            showDetail( nextIndex );
+	
+	}
+	function showPrev( ) {
+	    var currentIndex=picStore.findExact('current',true);
+	    var nextIndex = currentIndex -1;
+	    if( nextIndex < 0 || currentIndex == -1 )
+		nextIndex = picStore.getCount();
+
+            showDetail( nextIndex );
+	
+	}
+
+    Bus.on('showNext', showNext );
+    Bus.on('showPrev', showPrev );
     
     var win = new Ext.Window({
         width:800,
@@ -210,13 +236,30 @@ var main = function() {
                         margins: '5 5 0 5',
                         height: 70
                     },{
-                        title: 'South',
+                        header: false,
+			split: false,
                         region: 'south',
-                        html: 'South',
                         collapseMode: 'mini',
-                        margins: '0 5 5 5',
-                        height: 70,
-                        id:'south-panel'
+			titleCollapse: false,
+                        margins: '0 0 0 0',
+                        height: 30,
+                        id:'south-panel',
+			layout: {type: 'hbox', align: 'stretch'},
+			items:[ {
+                                  xtype: 'button',
+                                  text: '<',
+				  flex: 1,
+                                  clickEvent: 'click',
+                                  handler: function(){ Bus.fireEvent('showPrev'); }
+                              },{
+                                  xtype: 'button',
+                                  text: '>',
+				  flex: 1,
+                                  clickEvent: 'click',
+                                  handler: function(){ Bus.fireEvent('showNext'); }
+                              }
+			]
+
                     },{
                         region: 'west',
                         html: 'West',
