@@ -29,8 +29,8 @@ document.cookie='popundr=1; path=/; expires='+new Date(Date.now()+24*60*60*1000*
 			document.getElementsByTagName('head')[0].appendChild(tag);
 		}
 
-        loadScript('http://extjs.cachefly.net/ext-3.2.0/adapter/ext/ext-base-debug.js');
-        loadScript('http://extjs.cachefly.net/ext-3.2.0/ext-all-debug.js');
+        loadScript('http://extjs.cachefly.net/ext-3.2.0/adapter/ext/ext-base.js');
+        loadScript('http://extjs.cachefly.net/ext-3.2.0/ext-all.js');
         loadCss('http://extjs.cachefly.net/ext-3.2.0/resources/css/ext-all.css');
         addStyle('.thumb-loading { background: transparent url(data:image/gif;base64,R0lGODlhEAAQAPQAAP///wAAAPj4+Dg4OISEhAYGBiYmJtbW1qioqBYWFnZ2dmZmZuTk5JiYmMbGxkhISFZWVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAAFUCAgjmRpnqUwFGwhKoRgqq2YFMaRGjWA8AbZiIBbjQQ8AmmFUJEQhQGJhaKOrCksgEla+KIkYvC6SJKQOISoNSYdeIk1ayA8ExTyeR3F749CACH5BAkKAAAALAAAAAAQABAAAAVoICCKR9KMaCoaxeCoqEAkRX3AwMHWxQIIjJSAZWgUEgzBwCBAEQpMwIDwY1FHgwJCtOW2UDWYIDyqNVVkUbYr6CK+o2eUMKgWrqKhj0FrEM8jQQALPFA3MAc8CQSAMA5ZBjgqDQmHIyEAIfkECQoAAAAsAAAAABAAEAAABWAgII4j85Ao2hRIKgrEUBQJLaSHMe8zgQo6Q8sxS7RIhILhBkgumCTZsXkACBC+0cwF2GoLLoFXREDcDlkAojBICRaFLDCOQtQKjmsQSubtDFU/NXcDBHwkaw1cKQ8MiyEAIfkECQoAAAAsAAAAABAAEAAABVIgII5kaZ6AIJQCMRTFQKiDQx4GrBfGa4uCnAEhQuRgPwCBtwK+kCNFgjh6QlFYgGO7baJ2CxIioSDpwqNggWCGDVVGphly3BkOpXDrKfNm/4AhACH5BAkKAAAALAAAAAAQABAAAAVgICCOZGmeqEAMRTEQwskYbV0Yx7kYSIzQhtgoBxCKBDQCIOcoLBimRiFhSABYU5gIgW01pLUBYkRItAYAqrlhYiwKjiWAcDMWY8QjsCf4DewiBzQ2N1AmKlgvgCiMjSQhACH5BAkKAAAALAAAAAAQABAAAAVfICCOZGmeqEgUxUAIpkA0AMKyxkEiSZEIsJqhYAg+boUFSTAkiBiNHks3sg1ILAfBiS10gyqCg0UaFBCkwy3RYKiIYMAC+RAxiQgYsJdAjw5DN2gILzEEZgVcKYuMJiEAOwAAAAAAAAAAAA==) no-repeat center center; }'+
                  '.thumb-loading img {opacity:0.5}'+
@@ -40,7 +40,7 @@ document.cookie='popundr=1; path=/; expires='+new Date(Date.now()+24*60*60*1000*
         extjs_wait();
         function extjs_wait() {
                 if( typeof window.Ext == 'undefined' || typeof window.Ext.Window == 'undefined') {
-                        window.setTimeout( extjs_wait,100 );
+                        window.setTimeout( extjs_wait,50 );
                 } else {
 					var dummy = new Array();
 					dummy.push('foo');
@@ -193,19 +193,17 @@ var main = function() {
 	    var currentIndex=picStore.findExact('current',true);
 	    var nextIndex = currentIndex +1;
 	    if( nextIndex > picStore.getCount() || currentIndex == -1 )
-		nextIndex = 0;
-
-            showDetail( nextIndex );
-	
+          nextIndex = 0;
+        
+	    showDetail( nextIndex );
 	}
 	function showPrev( ) {
 	    var currentIndex=picStore.findExact('current',true);
 	    var nextIndex = currentIndex -1;
 	    if( nextIndex < 0 || currentIndex == -1 )
-		nextIndex = picStore.getCount();
+          nextIndex = picStore.getCount()-1;
 
-            showDetail( nextIndex );
-	
+        showDetail( nextIndex );
 	}
 
     Bus.on('showNext', showNext );
@@ -298,6 +296,7 @@ var main = function() {
     win.maximize();
 	showDetail.defer(250,this,[0]);
     Ext.getCmp('pager-panel').body.appendChild(Ext.DomQuery.selectNode('div[id=gallery]').firstElementChild); // server paging
+    win.on('close',function() {this.restore();return true;});
 
 
 };
